@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iriha.Compiler", "Iriha.Compiler\Iriha.Compiler.csproj", "{FF250A0B-B361-4E4E-B458-28A38ABC0F7E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Top", "Top", "{F6F2BD31-3B65-4519-81B8-2D7BD5790BE8}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitignore = ..\.gitignore
+		..\Directory.Build.props = ..\Directory.Build.props
+		..\.editorconfig = ..\.editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF250A0B-B361-4E4E-B458-28A38ABC0F7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF250A0B-B361-4E4E-B458-28A38ABC0F7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF250A0B-B361-4E4E-B458-28A38ABC0F7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF250A0B-B361-4E4E-B458-28A38ABC0F7E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
