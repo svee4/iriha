@@ -1,5 +1,6 @@
 using Iriha.Compiler.Infra;
 using Iriha.Compiler.Parsing.Nodes;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 
 namespace Iriha.Compiler.Semantic.Binding;
@@ -14,6 +15,95 @@ public sealed class OperationBinder(SyntaxTreeBinder binder)
 
 		var visitor = new Visitors.ExpressionVisitor<IOperation>
 		{
+			PipeExpressionVisitor = (expr, v) =>
+			{
+				/*
+				 
+				Pipe expression are converted into a block expression as such:
+
+				M1() >> M2($1)
+
+				becomes
+
+				{
+					let $1 = M1();
+					yield M2($1);
+				}
+
+				The same applies to chained pipe expressions
+
+				M1() >> M2($1) >> M3($1);
+				
+				becomes
+
+				{
+					let $1 = M1();
+					yield {
+						let $1 = M2($1);
+						yield M3($1);
+					}
+				}
+
+				ignoring the fact that in the nested block, $1 is defined using itself...
+				it just works :)
+
+				And with pipe groupings:
+
+				$(M1(), M2()) >> M($1, $2);
+
+				becomes
+
+				{
+					let $1 = M1();
+					let $2 = M2();
+					yield M($1, $2);
+				}
+				 
+				 */
+				var localsManager = _binder.SymbolManager.LocalVariablesManager;
+				using var localScope = localsManager.PushScope();
+
+				var localDeclarations = new List<VariableDeclarationOperation>();
+
+				if (expr.From is PipeGroupingExpression grouping)
+				{
+					foreach (var (i, valueExpr) in grouping.Expressions.Index())
+					{
+						var ident = new LocalSymbolIdent("$" + (i + 1));
+						var value = v.Visit(valueExpr);
+						var type = value.Type;
+
+						var localSymbol = new LocalVariableSymbol(ident, type, VariableModifiers.None);
+
+						var declaration = new VariableDeclarationOperation(localSymbol, value);
+						localDeclarations.Add(declaration);
+					}
+				}
+				else
+				{
+					var ident = new LocalSymbolIdent("$1");
+					var value = v.Visit(expr.From);
+					var type = value.Type;
+
+					var localSymbol = new LocalVariableSymbol(ident, type, VariableModifiers.None);
+
+					var declaration = new VariableDeclarationOperation(localSymbol, value);
+					localDeclarations.Add(declaration);
+				}
+
+				foreach (var variable in localDeclarations)
+				{
+					localsManager.AddLocal((LocalVariableSymbol)variable.Variable);
+				}
+
+				var to = v.Visit(expr.To);
+
+				var op = new BlockExpressionOperation([.. localDeclarations, to], to.Type);
+				return op;
+			},
+			PipeGroupingExpressionVisitor = (expr, v) =>
+				throw new InvalidOperationException("Invalid location for pipe grouping eexpression"),
+
 			FunctionCallExpressionVisitor = (expr, v) =>
 			{
 				IFunctionSymbol function;
@@ -101,16 +191,20 @@ public sealed class OperationBinder(SyntaxTreeBinder binder)
 				{
 					return new GlobalVariableReferenceOperation(sym2);
 				}
-				else
+				else if (_binder.SymbolManager.GlobalStructTable.TryGet(ident, out var sym3))
 				{
-					return _binder.SymbolManager.GlobalStructTable.TryGet(ident, out var sym3)
-						? new StructReferenceOperation(sym3)
-						: _binder.SymbolManager.GlobalTraitTable.TryGet(ident, out var sym4)
-											? new TraitReferenceOperation(sym4)
-											: _binder.SymbolManager.GlobalFunctionTable.TryGet(ident, out var sym5)
-																? (IOperation)new FunctionReferenceOperation(sym5)
-																: throw new SyntaxTreeBinder.CouldNotBindTypeException(expr.Identifier.ToString());
+					return new StructReferenceOperation(sym3);
 				}
+				else if (_binder.SymbolManager.GlobalTraitTable.TryGet(ident, out var sym4))
+				{
+					return new TraitReferenceOperation(sym4);
+				}
+				else if (_binder.SymbolManager.GlobalFunctionTable.TryGet(ident, out var sym5))
+				{
+					return new FunctionReferenceOperation(sym5);
+				}
+
+				throw new SyntaxTreeBinder.CouldNotBindTypeException(expr.Identifier.ToString());
 			},
 
 			IndexerCallExpressionVisitor = (expr, v) =>
@@ -156,12 +250,6 @@ public sealed class OperationBinder(SyntaxTreeBinder binder)
 			SubtractionExpressionVisitor = (expr, v) => new SubtractionOperation(v.Visit(expr.Left), v.Visit(expr.Right)),
 			MultiplicationExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new MultiplicationOperation(l, r)),
 			DivisionExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new DivisionOperation(l, r)),
-
-			BitwiseAndExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new BitwiseAndOperation(l, r)),
-			BitwiseOrExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new BitwiseOrOperation(l, r)),
-			BitwiseXorExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new BitwiseXorOperation(l, r)),
-			BitwiseLeftShiftExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new BitwiseLeftShiftOperation(l, r)),
-			BitwiseRightShiftExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new BitwiseRightShiftOperation(l, r)),
 
 			LogicalAndExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new LogicalAndOperation(l, r)),
 			LogicalOrExpressionVisitor = (expr, v) => v.BinaryVisit(expr, (l, r) => new LogicalOrOperation(l, r)),

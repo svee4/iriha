@@ -59,6 +59,8 @@ public sealed class Lexer
 
 	private ReadOnlySpan<char> Eat(int count)
 	{
+		ArgumentOutOfRangeException.ThrowIfLessThan(count, 1);
+
 		var s = Peek(count);
 		_index += count;
 		_column += count;
@@ -158,7 +160,7 @@ public sealed class Lexer
 				'{' => Token<OpenBrace>(),
 				'}' => Token<CloseBrace>(),
 				'<' => Token<OpenAngleBracket>(),
-				'>' => Token<CloseAngleBracket>(),
+				'>' when Peek(2) is not ">>" => Token<CloseAngleBracket>(),
 				',' => Token<Comma>(),
 				'.' => Token<Dot>(),
 				'+' => Token<Plus>(),
@@ -198,6 +200,7 @@ public sealed class Lexer
 
 			token = Peek(2) switch
 			{
+				">>" => Token<DoubleCloseAngleBracket>(),
 				"::" => Token<DoubleColon>(),
 				"==" => Token<DoubleEqual>(),
 				"!=" => Token<NotEqual>(),
@@ -208,6 +211,13 @@ public sealed class Lexer
 			{
 				_ = Eat(2);
 				tokens.Add(token);
+				continue;
+			}
+
+			if (Peek(2) is "$(")
+			{
+				_ = Eat();
+				tokens.Add(Token<DollarSign>());
 				continue;
 			}
 
@@ -271,8 +281,8 @@ public sealed class Lexer
 		var span = Remaining;
 		Assert(span.Length > 0);
 
-		var length = span.IndexOfAnyExcept(Constants.ValidIdentifierChars);
-		return Eat(length).ToString();
+		var length = span[1..].IndexOfAnyExcept(Constants.ValidIdentifierChars);
+		return Eat(length + 1).ToString();
 	}
 
 	private T Token<T>() where T : LexerToken

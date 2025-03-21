@@ -9,6 +9,9 @@ public interface IExpressionStatement : IExpression, IStatement;
 public sealed record FunctionExpression(TypeRef ReturnType, EquatableArray<TypeParameter> TypeParameters,
 	EquatableArray<FunctionParameter> Parameters, EquatableArray<IExpressionStatement> Statements) : IExpression;
 
+public sealed record PipeExpression(IExpression From, IExpression To) : IExpression;
+public sealed record PipeGroupingExpression(EquatableArray<IExpression> Expressions) : IExpression;
+
 public sealed record FunctionCallExpression(IExpression FunctionExpression, EquatableArray<FunctionArgument> Arguments) : IExpressionStatement;
 public sealed record IndexerCallExpression(IExpression Source, IExpression Indexer) : IExpression;
 public sealed record FunctionArgument(IExpression Value);
@@ -35,11 +38,6 @@ public sealed record SubtractionExpression(IExpression Left, IExpression Right) 
 public sealed record MultiplicationExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
 public sealed record DivisionExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
 
-public sealed record BitwiseAndExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
-public sealed record BitwiseOrExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
-public sealed record BitwiseXorExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
-public sealed record BitwiseLeftShiftExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
-public sealed record BitwiseRightShiftExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
 public sealed record LogicalAndExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
 public sealed record LogicalOrExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);
 public sealed record LogicalLessThanExpression(IExpression Left, IExpression Right) : BinaryExpression(Left, Right);

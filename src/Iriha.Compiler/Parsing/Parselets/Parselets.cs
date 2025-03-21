@@ -20,11 +20,9 @@ public enum Precedence
 {
 	None = 0,
 	Assignment = 1,
+	Pipe,
 	LogicalOr, // ||
 	LogicalAnd, // &&
-	BitwiseOr, // |
-	BitwiseXor, // ^
-	BitwiseAnd, // &
 	LogicalEquality, // ==, !=
 	LogicalComparison, // <, >
 	Additive, // +, -

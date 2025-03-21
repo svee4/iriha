@@ -7,6 +7,9 @@ public static class Visitors
 {
 	public sealed class ExpressionVisitor<T>
 	{
+		public required Func<PipeExpression, ExpressionVisitor<T>, T> PipeExpressionVisitor { get; init; }
+		public required Func<PipeGroupingExpression, ExpressionVisitor<T>, T> PipeGroupingExpressionVisitor { get; init; }
+
 		public required Func<FunctionCallExpression, ExpressionVisitor<T>, T> FunctionCallExpressionVisitor { get; init; }
 		public required Func<IndexerCallExpression, ExpressionVisitor<T>, T> IndexerCallExpressionVisitor { get; init; }
 
@@ -29,12 +32,6 @@ public static class Visitors
 		public required Func<MultiplicationExpression, ExpressionVisitor<T>, T> MultiplicationExpressionVisitor { get; init; }
 		public required Func<DivisionExpression, ExpressionVisitor<T>, T> DivisionExpressionVisitor { get; init; }
 
-		public required Func<BitwiseAndExpression, ExpressionVisitor<T>, T> BitwiseAndExpressionVisitor { get; init; }
-		public required Func<BitwiseOrExpression, ExpressionVisitor<T>, T> BitwiseOrExpressionVisitor { get; init; }
-		public required Func<BitwiseXorExpression, ExpressionVisitor<T>, T> BitwiseXorExpressionVisitor { get; init; }
-		public required Func<BitwiseLeftShiftExpression, ExpressionVisitor<T>, T> BitwiseLeftShiftExpressionVisitor { get; init; }
-		public required Func<BitwiseRightShiftExpression, ExpressionVisitor<T>, T> BitwiseRightShiftExpressionVisitor { get; init; }
-
 		public required Func<LogicalAndExpression, ExpressionVisitor<T>, T> LogicalAndExpressionVisitor { get; init; }
 		public required Func<LogicalOrExpression, ExpressionVisitor<T>, T> LogicalOrExpressionVisitor { get; init; }
 		public required Func<LogicalLessThanExpression, ExpressionVisitor<T>, T> LogicalLessThanExpressionVisitor { get; init; }
@@ -53,6 +50,9 @@ public static class Visitors
 		public T Visit(IExpression expression) =>
 			expression switch
 			{
+				PipeExpression ex => PipeExpressionVisitor(ex, this),
+				PipeGroupingExpression ex => PipeGroupingExpressionVisitor(ex, this),
+
 				FunctionCallExpression ex => FunctionCallExpressionVisitor(ex, this),
 				IndexerCallExpression ex => IndexerCallExpressionVisitor(ex, this),
 
@@ -74,12 +74,6 @@ public static class Visitors
 				SubtractionExpression ex => SubtractionExpressionVisitor(ex, this),
 				MultiplicationExpression ex => MultiplicationExpressionVisitor(ex, this),
 				DivisionExpression ex => DivisionExpressionVisitor(ex, this),
-
-				BitwiseAndExpression ex => BitwiseAndExpressionVisitor(ex, this),
-				BitwiseOrExpression ex => BitwiseOrExpressionVisitor(ex, this),
-				BitwiseXorExpression ex => BitwiseXorExpressionVisitor(ex, this),
-				BitwiseLeftShiftExpression ex => BitwiseLeftShiftExpressionVisitor(ex, this),
-				BitwiseRightShiftExpression ex => BitwiseRightShiftExpressionVisitor(ex, this),
 
 				LogicalAndExpression ex => LogicalAndExpressionVisitor(ex, this),
 				LogicalOrExpression ex => LogicalOrExpressionVisitor(ex, this),

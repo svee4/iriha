@@ -2,10 +2,13 @@ using Iriha.Compiler;
 
 const string Input = """
 func main(argc: int, argv: &&byte): int {
-	
+	let x: int = argc >> M1($1);
+	let y: int = $(argc, x) >> $1 / $2;
 }
 
-func M<T>(val: T): T { return val; }
+func M1(v: int): int { return v; }
+
+#func M<T>(val: T): T { return val; }
 
 func sample(value: &int, list: Core::List<int>): int {
 	let another_ref: &int = value;
@@ -17,8 +20,6 @@ func sample(value: &int, list: Core::List<int>): int {
 	let eq1: bool = x == deref;
 	let eq2: bool = x < deref;
 	mut eq3: bool = eq1 && eq2;
-
-	let bitwised: int = x & deref;
 
 	_ = sample(x, 3);
 

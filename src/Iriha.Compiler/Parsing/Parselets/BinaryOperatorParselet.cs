@@ -19,8 +19,6 @@ public sealed class BinaryOperatorParselet<TToken>(Parser parser) : ParseletBase
 		{
 			Plus or Minus => Precedence.Additive,
 			Star or Slash => Precedence.Multiplicative,
-			Ampersand => Precedence.BitwiseAnd,
-			Pipe => Precedence.BitwiseOr,
 			OpenAngleBracket or CloseAngleBracket => Precedence.LogicalComparison,
 			DoubleEqual or NotEqual => Precedence.LogicalEquality,
 			_ => parser.ThrowAt<Precedence>(token1, "Undefined precedence for tokens {Token1} and {Token2}", token1, token2),
@@ -53,8 +51,6 @@ public sealed class BinaryOperatorParselet<TToken>(Parser parser) : ParseletBase
 				Minus => new SubtractionExpression(left, expr),
 				Star => new MultiplicationExpression(left, expr),
 				Slash => new DivisionExpression(left, expr),
-				Ampersand => new BitwiseAndExpression(left, expr),
-				Pipe => new BitwiseOrExpression(left, expr),
 				OpenAngleBracket => new LogicalLessThanExpression(left, expr),
 				CloseAngleBracket => new LogicalGreaterThanExpression(left, expr),
 				DoubleEqual => new LogicalEqualExpression(left, expr),

@@ -1,6 +1,8 @@
+using Iriha.Compiler.Infra;
 using Iriha.Compiler.Semantic.Binding;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Iriha.Compiler.Semantic;
 
@@ -48,32 +50,55 @@ public sealed class LocalVariablesManager(SymbolTableManager manager)
 {
 	private readonly SymbolTableManager _manager = manager;
 
-	private Stack<LocalVariableTable> Tables { get; } = [];
-	private LocalVariableTable CurrentScope => Tables.Peek();
+	private Stack<LocalVariableTable> Scopes { get; } = [];
+	private LocalVariableTable CurrentScope => Scopes.Peek();
 
-	public void PushScope() => Tables.Push(new(_manager));
+	public IDisposable PushScope()
+	{
+		var scope = new LocalVariableTable(_manager);
+		Scopes.Push(scope);
 
-	public void PopScope() => Tables.Pop();
+		return new MultiUseDisposable(() =>
+		{
+			if (!ReferenceEquals(scope, CurrentScope))
+			{
+				throw new InvalidOperationException("Attempt to dispose the wrong scope - a scope has gone rogue");
+			}
+
+			_ = PopScope();
+		});
+	}
+
+	public LocalVariableTable PopScope() => Scopes.Pop();
 
 	public void EnsureNoScope()
 	{
-		if (Tables.Count != 0)
-			throw new InvalidOperationException($"Scope was {Tables.Count}");
+		if (Scopes.Count > 0)
+		{
+			throw new InvalidOperationException($"Scopes was not empty ({Scopes.Count})");
+		}
 	}
 
 	public void AddLocal(LocalVariableSymbol variable)
 	{
-		_manager.EnsureSymbolNameIsUnique(variable.Ident);
+		// shadowing is allowed - local scope is always check first and top down
+		if (CurrentScope.Symbols.Any(sym => sym.Ident == variable.Ident))
+		{
+			throw new InvalidOperationException($"Variable ident {variable.Ident} already used in current scope");
+		}
+
 		CurrentScope.Add(variable);
 	}
 
 	public bool IsInScope(LocalSymbolIdent ident)
 	{
 		// foreach over a stack enumerates from top to bottom
-		foreach (var table in Tables)
+		foreach (var table in Scopes)
 		{
 			if (table.Contains(ident))
+			{
 				return true;
+			}
 		}
 
 		return false;
@@ -82,7 +107,7 @@ public sealed class LocalVariablesManager(SymbolTableManager manager)
 	public bool TryGet(string name, [NotNullWhen(true)] out LocalVariableSymbol? symbol)
 	{
 		var ident = IdentHelper.ForLocalVariable(name);
-		foreach (var table in Tables)
+		foreach (var table in Scopes)
 		{
 			if (table.TryGet(ident, out symbol))
 			{

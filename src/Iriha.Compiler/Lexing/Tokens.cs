@@ -21,8 +21,8 @@ public sealed record ImplKeyword() : Keyword("impl");
 public sealed record FuncKeyword() : Keyword("func");
 public sealed record LetKeyword() : Keyword("let");
 public sealed record MutKeyword() : Keyword("mut");
-public sealed record UnderscoreKeyword() : Keyword("underscore");
 public sealed record NeverKeyword() : Keyword("never");
+public sealed record UnderscoreKeyword() : Keyword("_");
 public sealed record ArrowKeyword() : Keyword("->");
 
 public abstract record TypeKeyword(string Keyword, string CoreLibType) : Keyword(Keyword);
@@ -46,9 +46,11 @@ public sealed record OpenBrace : LexerToken;
 public sealed record CloseBrace : LexerToken;
 public sealed record OpenAngleBracket : LexerToken;
 public sealed record CloseAngleBracket : LexerToken;
+public sealed record DoubleCloseAngleBracket : LexerToken; // >>
 
 public sealed record Comma : LexerToken;
 public sealed record Dot : LexerToken;
+public sealed record DollarSign : LexerToken;
 
 public sealed record Plus : LexerToken;
 public sealed record Minus : LexerToken;

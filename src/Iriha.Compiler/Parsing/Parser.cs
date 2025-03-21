@@ -111,9 +111,10 @@ public sealed class Parser
 			: [];
 
 		var forStruct = Eat<IdentifierLiteral>().Value;
-		var structGenerics = Peek() is OpenAngleBracket
-			? ParseTypeArguments()
-			: [];
+		throw new NotImplementedException();
+		//var structGenerics = Peek() is OpenAngleBracket
+		//	? ParseTypeArguments()
+		//	: [];
 
 	}
 

@@ -2,6 +2,7 @@ using Iriha.Compiler.Lexing;
 using Iriha.Compiler.Parsing.Nodes;
 using Iriha.Compiler.Parsing.Parselets;
 using System.Diagnostics;
+using System.Runtime.Intrinsics.Arm;
 
 namespace Iriha.Compiler.Parsing;
 
@@ -57,6 +58,7 @@ public sealed class ExpressionParser(Parser parser)
 		NumericLiteral =>	new LiteralParselet<NumericLiteral>(),
 		IdentifierLiteral =>	new IdentifierParselet(),
 		UnderscoreKeyword =>	new DiscardExpressionParselet(),
+		DollarSign =>	new PipeGroupingParselet(),
 		LetKeyword or MutKeyword =>		new VariableDeclarationParselet(),
 		_ => null
 	};
@@ -76,6 +78,7 @@ public sealed class ExpressionParser(Parser parser)
 		NotEqual =>		new BinaryOperatorParselet<NotEqual>(_parser),
 		OpenAngleBracket =>		new BinaryOperatorParselet<OpenAngleBracket>(_parser),
 		CloseAngleBracket =>	new BinaryOperatorParselet<CloseAngleBracket>(_parser),
+		DoubleCloseAngleBracket =>	new PipeParselet(),
 		_ => null
 	};
 

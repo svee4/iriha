@@ -43,64 +43,7 @@ public sealed class SyntaxTree
 					w.AppendLine();
 					w.AddIndent();
 
-					foreach (var st in func.Statements)
-					{
-						w.AppendIndentation();
-						switch (st)
-						{
-							case VariableDeclarationStatement varDecl:
-							{
-								w.Append("var ");
-								w.Append(varDecl.Name.Value);
-								w.Append(": ");
-								w.Append(TypeRefToString(varDecl.Type));
-								w.Append(" = ");
-								w.Append(ExpressionToString(varDecl.Initializer));
-								w.Append(';');
-								w.AppendLine();
-								break;
-							}
-							case DiscardExpression discard:
-							{
-								w.Append("_ = ");
-								w.Append(ExpressionToString(discard.Expression));
-								w.Append(';');
-								break;
-							}
-							case EmptyStatement:
-							{
-								w.Append(";");
-								break;
-							}
-							case ReturnExpression ret:
-							{
-								w.Append("return");
-								if (ret.Value is { } v)
-								{
-									w.Append(" " + ExpressionToString(v));
-								}
-								w.Append(";");
-								break;
-							}
-							case YieldExpression yld:
-							{
-								w.Append("return");
-								if (yld.Value is { } v)
-								{
-									w.Append(" " + ExpressionToString(v));
-								}
-								w.Append(";");
-								break;
-							}
-							case FunctionCallExpression call:
-							{
-								w.Append(ExpressionToString(call.FunctionExpression));
-								w.Append($"({string.Join(", ", call.Arguments.Select(arg => ExpressionToString(arg.Value)))})");
-								break;
-							}
-							case var idk: throw new NotSupportedException(idk.ToString());
-						}
-					}
+					AppendStatements(func.Statements);
 
 					w.RemoveIndent();
 					w.AppendLine();
@@ -136,6 +79,70 @@ public sealed class SyntaxTree
 
 		return w.StringBuilder.ToString();
 
+		void AppendStatements(IEnumerable<IExpressionStatement> statements)
+		{
+			foreach (var st in statements)
+			{
+				w.AppendIndentation();
+				switch (st)
+				{
+					case VariableDeclarationStatement varDecl:
+					{
+						w.Append("var ");
+						w.Append(varDecl.Name.Value);
+						w.Append(": ");
+						w.Append(TypeRefToString(varDecl.Type));
+						w.Append(" = ");
+						w.Append(ExpressionToString(varDecl.Initializer));
+						w.Append(';');
+						w.AppendLine();
+						break;
+					}
+					case DiscardExpression discard:
+					{
+						w.Append("_ = ");
+						w.Append(ExpressionToString(discard.Expression));
+						w.Append(';');
+						break;
+					}
+					case EmptyStatement:
+					{
+						w.Append(";");
+						break;
+					}
+					case ReturnExpression ret:
+					{
+						w.Append("return");
+						if (ret.Value is { } v)
+						{
+							w.Append(" " + ExpressionToString(v));
+						}
+						w.Append(";");
+						break;
+					}
+					case YieldExpression yld:
+					{
+						w.Append("return");
+						if (yld.Value is { } v)
+						{
+							w.Append(" " + ExpressionToString(v));
+						}
+						w.Append(";");
+						break;
+					}
+					case FunctionCallExpression call:
+					{
+						w.Append(ExpressionToString(call.FunctionExpression));
+						w.Append($"({string.Join(", ", call.Arguments.Select(arg => ExpressionToString(arg.Value)))})");
+						w.Append(";");
+						w.AppendLine();
+						break;
+					}
+					case var idk: throw new NotSupportedException(idk.ToString());
+				}
+			}
+		}
+
 		static string TypeRefToString(TypeRef type)
 		{
 			var b = $"{new string('&', type.PointerCount)}{type.Identifier.Value}";
@@ -158,11 +165,14 @@ public sealed class SyntaxTree
 			IndexerCallExpression f => $"{ExpressionToString(f.Source)}({ExpressionToString(f.Indexer)})",
 			MemberAccessExpression f => $"{ExpressionToString(f.Source)}.{ExpressionToString(f.Member)}",
 
+			PipeExpression p => $"{ExpressionToString(p.From)} >> {ExpressionToString(p.To)}",
+			PipeGroupingExpression p => $"$({string.Join(", ", p.Expressions.Select(ExpressionToString))})",
+
 			VariableDeclarationStatement v => v.Initializer is null ? $"var {v.Name};" : $"var {v.Name} = {ExpressionToString(v.Initializer)}",
 
 			BlockExpression b => $$"""
 {
-	{{string.Join(";", b.Statements.Select(ExpressionToString))}}
+	{{string.Join(";\n", b.Statements.Select(ExpressionToString))}}
 }
 """,
 
@@ -189,13 +199,6 @@ public sealed class SyntaxTree
 			SubtractionExpression => "-",
 			MultiplicationExpression => "*",
 			DivisionExpression => "/",
-
-			BitwiseAndExpression => "&",
-			BitwiseOrExpression => "|",
-			BitwiseXorExpression => "^",
-
-			BitwiseLeftShiftExpression => "<<",
-			BitwiseRightShiftExpression => ">>",
 
 			LogicalAndExpression => "&&",
 			LogicalOrExpression => "||",
