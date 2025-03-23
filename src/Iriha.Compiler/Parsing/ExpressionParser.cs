@@ -51,6 +51,7 @@ public sealed class ExpressionParser(Parser parser)
 		Star =>			new PrefixOperatorParselet<Star>(),
 		OpenParen =>	new GroupingParselet(),
 		OpenBrace =>	new BlockExpressionParselet(),
+		DollarSign =>	new TupleCreationExpressionParselet(),
 		FuncKeyword =>	new FunctionExpressionParselet(),
 		YieldKeyword => new YieldExpressionParselet(),
 		ReturnKeyword =>	new ReturnExpressionParselet(),
@@ -58,7 +59,6 @@ public sealed class ExpressionParser(Parser parser)
 		NumericLiteral =>	new LiteralParselet<NumericLiteral>(),
 		IdentifierLiteral =>	new IdentifierParselet(),
 		UnderscoreKeyword =>	new DiscardExpressionParselet(),
-		DollarSign =>	new PipeGroupingParselet(),
 		LetKeyword or MutKeyword =>		new VariableDeclarationParselet(),
 		_ => null
 	};
@@ -71,11 +71,11 @@ public sealed class ExpressionParser(Parser parser)
 		Minus =>	new BinaryOperatorParselet<Minus>(_parser),
 		Star =>		new BinaryOperatorParselet<Star>(_parser),
 		Slash =>	new BinaryOperatorParselet<Slash>(_parser),
+		NotEqual =>		new BinaryOperatorParselet<NotEqual>(_parser),
 		Ampersand =>	new BinaryOperatorParselet<Ampersand>(_parser),
 		OpenParen =>	new FunctionCallParselet(),
 		OpenBracket =>	new IndexerCallParselet(),
 		DoubleEqual =>	new BinaryOperatorParselet<DoubleEqual>(_parser),
-		NotEqual =>		new BinaryOperatorParselet<NotEqual>(_parser),
 		OpenAngleBracket =>		new BinaryOperatorParselet<OpenAngleBracket>(_parser),
 		CloseAngleBracket =>	new BinaryOperatorParselet<CloseAngleBracket>(_parser),
 		DoubleCloseAngleBracket =>	new PipeParselet(),

@@ -1,5 +1,6 @@
 using Iriha.Compiler.Infra;
 using Iriha.Compiler.Parsing.Nodes;
+using Iriha.Compiler.Semantic.Binding;
 using System.Text;
 
 namespace Iriha.Compiler.Semantic;
@@ -41,6 +42,7 @@ public enum VariableModifiers
 public interface IVariableSymbol : INamedSymbol
 {
 	VariableModifiers Modifiers { get; }
+	TypeReferenceSymbol Type { get; }
 }
 
 public interface ISymbolIdent;
@@ -223,6 +225,12 @@ public sealed record NeverTypeReferenceSymbol() : GlobalTypeReferenceSymbol(Glob
 /// The empty unit type
 /// </summary>
 public sealed record VoidTypeReferenceSymbol() : GlobalTypeReferenceSymbol(GlobalSymbolIdent.CoreLib("Void"));
+
+public sealed record TupleTypeReferenceSymbol(EquatableArray<TypeReferenceSymbol> Values)
+	: GlobalTypeReferenceSymbol(GlobalSymbolIdent.CoreLib(IdentHelper.FormatArity("Tuple", Values.Count)))
+{
+	public int Length => Values.Count;
+}
 
 /// <summary>
 /// <code>

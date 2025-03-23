@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using Iriha.Compiler.Infra;
 
 namespace Iriha.Compiler.Semantic;
 
@@ -9,12 +9,7 @@ public interface IOperation
 
 public sealed record VariableDeclarationOperation(IVariableSymbol Variable, IOperation? Initializer) : IOperation
 {
-	public TypeReferenceSymbol Type => Variable switch
-	{
-		GlobalVariableSymbol g => g.Type,
-		LocalVariableSymbol l => l.Type,
-		var v => throw new UnreachableException($"IVariableSymbol {v?.GetType()} not implemented")
-	};
+	public TypeReferenceSymbol Type => Variable.Type;
 }
 
 public sealed record InvocationOperation(IFunctionSymbol Target, List<IOperation> Arguments) : IOperation
@@ -42,7 +37,18 @@ public sealed record YieldOperation(IOperation? Value) : IOperation
 	public TypeReferenceSymbol Type => Value?.Type ?? new VoidTypeReferenceSymbol();
 }
 
-public sealed record BlockExpressionOperation(List<IOperation> Operations, TypeReferenceSymbol Type) : IOperation;
+public sealed record BlockExpressionOperation(EquatableArray<IOperation> Operations, TypeReferenceSymbol Type) : IOperation;
+
+public sealed record PipeOperation(IOperation Source, IOperation Destination) : IOperation
+{
+	public TypeReferenceSymbol Type => Destination.Type;
+}
+
+public sealed record TupleCreationOperation(EquatableArray<IOperation> Values) : IOperation
+{
+	public TypeReferenceSymbol Type { get; } = new TupleTypeReferenceSymbol([.. Values.Select(op => op.Type)]);
+}
+
 public sealed record DiscardOperation(IOperation Value) : IOperation
 {
 	public TypeReferenceSymbol Type => Value.Type;

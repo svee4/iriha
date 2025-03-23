@@ -2,11 +2,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Iriha.Compiler.Semantic;
 
-public abstract class SymbolTable<T, TIdent>(SymbolTableManager manager)
+public abstract class SymbolTable<T, TIdent>(SymbolTableManager? manager)
 	where T : INamedSymbol
 	where TIdent : ISymbolIdent
 {
-	protected SymbolTableManager Manager { get; } = manager;
+	protected SymbolTableManager? Manager { get; } = manager;
 	protected Dictionary<TIdent, T> SymbolMap { get; } = [];
 
 	public IReadOnlyList<T> Symbols => SymbolMap.Values.ToArray();
@@ -27,7 +27,7 @@ public abstract class SymbolTable<T, TIdent>(SymbolTableManager manager)
 
 	public void Add(T symbol)
 	{
-		Manager.EnsureSymbolNameIsUnique(symbol.Ident);
+		Manager?.EnsureSymbolNameIsUnique(symbol.Ident);
 		SymbolMap.Add((TIdent)symbol.Ident, symbol);
 	}
 
@@ -40,7 +40,7 @@ public abstract class SymbolTable<T, TIdent>(SymbolTableManager manager)
 		SymbolMap[ident] = updater(SymbolMap[ident]);
 }
 
-public sealed class LocalVariableTable(SymbolTableManager manager) : SymbolTable<LocalVariableSymbol, LocalSymbolIdent>(manager);
+public sealed class LocalVariableTable(SymbolTableManager? manager) : SymbolTable<LocalVariableSymbol, LocalSymbolIdent>(manager);
 public sealed class GlobalVariableTable(SymbolTableManager manager) : SymbolTable<GlobalVariableSymbol, GlobalSymbolIdent>(manager);
 public sealed class StructTable(SymbolTableManager manager) : SymbolTable<StructSymbol, GlobalSymbolIdent>(manager);
 public sealed class TraitTable(SymbolTableManager manager) : SymbolTable<TraitSymbol, GlobalSymbolIdent>(manager);

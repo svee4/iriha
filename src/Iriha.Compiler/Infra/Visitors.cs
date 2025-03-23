@@ -8,7 +8,7 @@ public static class Visitors
 	public sealed class ExpressionVisitor<T>
 	{
 		public required Func<PipeExpression, ExpressionVisitor<T>, T> PipeExpressionVisitor { get; init; }
-		public required Func<PipeGroupingExpression, ExpressionVisitor<T>, T> PipeGroupingExpressionVisitor { get; init; }
+		public required Func<TupleCreationExpression, ExpressionVisitor<T>, T> TupleCreationExpressionVisitor { get; init; }
 
 		public required Func<FunctionCallExpression, ExpressionVisitor<T>, T> FunctionCallExpressionVisitor { get; init; }
 		public required Func<IndexerCallExpression, ExpressionVisitor<T>, T> IndexerCallExpressionVisitor { get; init; }
@@ -51,7 +51,7 @@ public static class Visitors
 			expression switch
 			{
 				PipeExpression ex => PipeExpressionVisitor(ex, this),
-				PipeGroupingExpression ex => PipeGroupingExpressionVisitor(ex, this),
+				TupleCreationExpression ex => TupleCreationExpressionVisitor(ex, this),
 
 				FunctionCallExpression ex => FunctionCallExpressionVisitor(ex, this),
 				IndexerCallExpression ex => IndexerCallExpressionVisitor(ex, this),

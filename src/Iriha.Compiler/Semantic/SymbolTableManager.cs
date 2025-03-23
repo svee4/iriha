@@ -2,7 +2,6 @@ using Iriha.Compiler.Infra;
 using Iriha.Compiler.Semantic.Binding;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace Iriha.Compiler.Semantic;
 
@@ -104,9 +103,8 @@ public sealed class LocalVariablesManager(SymbolTableManager manager)
 		return false;
 	}
 
-	public bool TryGet(string name, [NotNullWhen(true)] out LocalVariableSymbol? symbol)
+	public bool TryGet(LocalSymbolIdent ident, [NotNullWhen(true)] out LocalVariableSymbol? symbol)
 	{
-		var ident = IdentHelper.ForLocalVariable(name);
 		foreach (var table in Scopes)
 		{
 			if (table.TryGet(ident, out symbol))

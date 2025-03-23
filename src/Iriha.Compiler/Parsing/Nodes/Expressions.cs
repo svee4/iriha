@@ -10,7 +10,7 @@ public sealed record FunctionExpression(TypeRef ReturnType, EquatableArray<TypeP
 	EquatableArray<FunctionParameter> Parameters, EquatableArray<IExpressionStatement> Statements) : IExpression;
 
 public sealed record PipeExpression(IExpression From, IExpression To) : IExpression;
-public sealed record PipeGroupingExpression(EquatableArray<IExpression> Expressions) : IExpression;
+public sealed record TupleCreationExpression(EquatableArray<IExpression> Expressions) : IExpression;
 
 public sealed record FunctionCallExpression(IExpression FunctionExpression, EquatableArray<FunctionArgument> Arguments) : IExpressionStatement;
 public sealed record IndexerCallExpression(IExpression Source, IExpression Indexer) : IExpression;

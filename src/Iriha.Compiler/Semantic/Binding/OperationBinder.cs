@@ -1,6 +1,5 @@
 using Iriha.Compiler.Infra;
 using Iriha.Compiler.Parsing.Nodes;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 
 namespace Iriha.Compiler.Semantic.Binding;
@@ -13,96 +12,48 @@ public sealed class OperationBinder(SyntaxTreeBinder binder)
 	{
 		using var scope = _binder.Logger.BeginScope(nameof(ParseOperation));
 
+		// implicit variables from pipes are stored in this
+		// because it needs specific functionality
+		// because the variables of previous pipes should not be accessible in a nested pipe.
+		// scuffed.
+		var pipeVariablesManager = new Stack<LocalVariableTable>();
+
 		var visitor = new Visitors.ExpressionVisitor<IOperation>
 		{
 			PipeExpressionVisitor = (expr, v) =>
 			{
-				/*
-				 
-				Pipe expression are converted into a block expression as such:
+				var source = v.Visit(expr.From);
+				var table = new LocalVariableTable(null);
+				pipeVariablesManager.Push(table);
 
-				M1() >> M2($1)
-
-				becomes
-
+				try
 				{
-					let $1 = M1();
-					yield M2($1);
-				}
+					// create implicit variables and push to be in scope when binding the destination expression
+					var sourceLocalIdent = IdentHelper.ForLocalVariable("$0");
+					var sourceLocalSymbol = new LocalVariableSymbol(sourceLocalIdent, source.Type, VariableModifiers.None);
+					table.Add(sourceLocalSymbol);
 
-				The same applies to chained pipe expressions
-
-				M1() >> M2($1) >> M3($1);
-				
-				becomes
-
-				{
-					let $1 = M1();
-					yield {
-						let $1 = M2($1);
-						yield M3($1);
-					}
-				}
-
-				ignoring the fact that in the nested block, $1 is defined using itself...
-				it just works :)
-
-				And with pipe groupings:
-
-				$(M1(), M2()) >> M($1, $2);
-
-				becomes
-
-				{
-					let $1 = M1();
-					let $2 = M2();
-					yield M($1, $2);
-				}
-				 
-				 */
-				var localsManager = _binder.SymbolManager.LocalVariablesManager;
-				using var localScope = localsManager.PushScope();
-
-				var localDeclarations = new List<VariableDeclarationOperation>();
-
-				if (expr.From is PipeGroupingExpression grouping)
-				{
-					foreach (var (i, valueExpr) in grouping.Expressions.Index())
+					if (source.Type is TupleTypeReferenceSymbol tuple)
 					{
-						var ident = new LocalSymbolIdent("$" + (i + 1));
-						var value = v.Visit(valueExpr);
-						var type = value.Type;
-
-						var localSymbol = new LocalVariableSymbol(ident, type, VariableModifiers.None);
-
-						var declaration = new VariableDeclarationOperation(localSymbol, value);
-						localDeclarations.Add(declaration);
+						foreach (var (index, value) in tuple.Values.Index())
+						{
+							var ident = IdentHelper.ForLocalVariable("$" + (index + 1));
+							var symbol = new LocalVariableSymbol(ident, value, VariableModifiers.None);
+							table.Add(symbol);
+						}
 					}
+
+					var dest = v.Visit(expr.To);
+					return new PipeOperation(source, dest);
 				}
-				else
+				finally
 				{
-					var ident = new LocalSymbolIdent("$1");
-					var value = v.Visit(expr.From);
-					var type = value.Type;
-
-					var localSymbol = new LocalVariableSymbol(ident, type, VariableModifiers.None);
-
-					var declaration = new VariableDeclarationOperation(localSymbol, value);
-					localDeclarations.Add(declaration);
+					_ = pipeVariablesManager.Pop();
 				}
-
-				foreach (var variable in localDeclarations)
-				{
-					localsManager.AddLocal((LocalVariableSymbol)variable.Variable);
-				}
-
-				var to = v.Visit(expr.To);
-
-				var op = new BlockExpressionOperation([.. localDeclarations, to], to.Type);
-				return op;
 			},
-			PipeGroupingExpressionVisitor = (expr, v) =>
-				throw new InvalidOperationException("Invalid location for pipe grouping eexpression"),
+
+			TupleCreationExpressionVisitor = (expr, v) =>
+				new TupleCreationOperation([.. expr.Expressions.Select(v.Visit)]),
 
 			FunctionCallExpressionVisitor = (expr, v) =>
 			{
@@ -181,25 +132,31 @@ public sealed class OperationBinder(SyntaxTreeBinder binder)
 
 			IdentifierExpressionVisitor = (expr, v) =>
 			{
-				var ident = _binder.IdentHelper.FromIdentifier(expr.Identifier);
+				var localIdent = IdentHelper.ForLocalVariable(expr.Identifier.Value);
+				var globalIdent = _binder.IdentHelper.FromIdentifier(expr.Identifier);
 
-				if (_binder.SymbolManager.LocalVariablesManager.TryGet(expr.Identifier.Value, out var sym))
+				if (pipeVariablesManager.TryPeek(out var table)
+					&& table.TryGet(localIdent, out var sym0))
 				{
-					return new LocalVariableReferenceOperation(sym);
+					return new LocalVariableReferenceOperation(sym0);
 				}
-				else if (_binder.SymbolManager.GlobalVariableTable.TryGet(ident, out var sym2))
+				else if (_binder.SymbolManager.LocalVariablesManager.TryGet(localIdent, out var sym1))
+				{
+					return new LocalVariableReferenceOperation(sym1);
+				}
+				else if (_binder.SymbolManager.GlobalVariableTable.TryGet(globalIdent, out var sym2))
 				{
 					return new GlobalVariableReferenceOperation(sym2);
 				}
-				else if (_binder.SymbolManager.GlobalStructTable.TryGet(ident, out var sym3))
+				else if (_binder.SymbolManager.GlobalStructTable.TryGet(globalIdent, out var sym3))
 				{
 					return new StructReferenceOperation(sym3);
 				}
-				else if (_binder.SymbolManager.GlobalTraitTable.TryGet(ident, out var sym4))
+				else if (_binder.SymbolManager.GlobalTraitTable.TryGet(globalIdent, out var sym4))
 				{
 					return new TraitReferenceOperation(sym4);
 				}
-				else if (_binder.SymbolManager.GlobalFunctionTable.TryGet(ident, out var sym5))
+				else if (_binder.SymbolManager.GlobalFunctionTable.TryGet(globalIdent, out var sym5))
 				{
 					return new FunctionReferenceOperation(sym5);
 				}

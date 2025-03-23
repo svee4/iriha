@@ -9,7 +9,7 @@ public sealed class IdentHelper(SyntaxTreeBinder analyzer)
 
 	private string CurComp => _analyzer.Compilation.ModuleName;
 
-	private static string FormatArity(string name, int arity) =>
+	public static string FormatArity(string name, int arity) =>
 		arity > 0 ? $"{name}`{arity}" : name;
 
 	public static LocalSymbolIdent ForLocalVariable(string localName) =>

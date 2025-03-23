@@ -166,7 +166,7 @@ public sealed class SyntaxTree
 			MemberAccessExpression f => $"{ExpressionToString(f.Source)}.{ExpressionToString(f.Member)}",
 
 			PipeExpression p => $"{ExpressionToString(p.From)} >> {ExpressionToString(p.To)}",
-			PipeGroupingExpression p => $"$({string.Join(", ", p.Expressions.Select(ExpressionToString))})",
+			TupleCreationExpression p => $"$({string.Join(", ", p.Expressions.Select(ExpressionToString))})",
 
 			VariableDeclarationStatement v => v.Initializer is null ? $"var {v.Name};" : $"var {v.Name} = {ExpressionToString(v.Initializer)}",
 

@@ -2,8 +2,8 @@ using Iriha.Compiler;
 
 const string Input = """
 func main(argc: int, argv: &&byte): int {
-	let x: int = argc >> M1($1);
-	let y: int = $(argc, x) >> $1 / $2;
+	let x: int = argc >> M1($0);
+	let y: int = $(argc, x) >> $1 / $2 >> $0;
 }
 
 func M1(v: int): int { return v; }
