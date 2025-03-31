@@ -10,8 +10,9 @@ public sealed class StructBuilder
 	private List<FieldBuilder> _fields = [];
 	public IReadOnlyList<FieldBuilder> Fields => _fields;
 
-	public TypeSystem.Struct Build() => 
+	public TypeSystem.Struct Build(string assembly) => 
 		new TypeSystem.Struct(
+			assembly,
 			Name,
 			attributes: [], 
 			typeParameters: [], 

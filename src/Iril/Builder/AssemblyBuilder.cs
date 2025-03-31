@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace Iril.Builder;
 
-public sealed class AssemblyBuilder(string baseNamespace)
+public sealed class AssemblyBuilder(string name)
 {
 	private List<AttributeDeclarationBuilder> _attributes = [];
 	public IReadOnlyList<AttributeDeclarationBuilder> Attributes => _attributes;
@@ -14,13 +14,14 @@ public sealed class AssemblyBuilder(string baseNamespace)
 	private List<FunctionBuilder> _functions = [];
 	public IReadOnlyList<FunctionBuilder> Functions => _functions;
 
-	public string BaseNamespace { get; } = baseNamespace;
+	public string Name { get; } = name;
 
-	public Assembly Build() => 
+	public Assembly Build() =>
 		new Assembly(
-			Attributes.Select(a => a.Build()).ToImmutableArray(),
-			Structs.Select(s => s.Build()).ToImmutableArray(),
-			Functions.Select(f => f.Build()).ToImmutableArray());
+			Name,
+			Attributes.Select(a => a.Build(Name)).ToImmutableArray(),
+			Structs.Select(s => s.Build(Name)).ToImmutableArray(),
+			Functions.Select(f => f.Build(Name)).ToImmutableArray());
 
 	public AttributeDeclarationBuilder AddAttributeDeclaration(string name, IEnumerable<string> parameters)
 	{
@@ -31,7 +32,6 @@ public sealed class AssemblyBuilder(string baseNamespace)
 
 	public StructBuilder AddStruct(string name)
 	{
-		name = BaseNamespace + "." + name;
 		var builder = new StructBuilder(name);
 		_structs.Add(builder);
 		return builder;

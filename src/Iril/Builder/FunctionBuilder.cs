@@ -10,9 +10,9 @@ public sealed class FunctionBuilder
 		Signature = signature;
 	}
 
-	public TypeSystem.Function Build() =>
+	public TypeSystem.Function Build(string assembly) =>
 		new TypeSystem.Function(
 			attributes: [],
-			signature: Signature.Build(),
+			signature: Signature.Build(assembly),
 			body: Writer.Build());
 }

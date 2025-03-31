@@ -12,14 +12,14 @@ public static class CoreLib
 	{
 		var assb = new AssemblyBuilder("Core");
 
-		var memberFunctionAttribute = assb.AddAttributeDeclaration("MemberFunction", ["member"]);
-		var operatorFunctionAttribute = assb.AddAttributeDeclaration("OperatorFunction", ["operatorIdent"]);
-		var thisParameterAttribute = assb.AddAttributeDeclaration("ThisParameter", []);
+		var memberFunctionAttribute = assb.AddAttributeDeclaration("memberFunction", ["member"]);
+		var operatorFunctionAttribute = assb.AddAttributeDeclaration("operatorFunction", ["operatorIdent"]);
+		var thisParameterAttribute = assb.AddAttributeDeclaration("thisParameter", []);
 
 		var int32b = assb.AddStruct("Int32");
 		{
 			var opAdd = assb.AddFunction(new FunctionSignatureBuilder(
-				name: "Add",
+				name: "Int32.Add",
 				typeParameters: [],
 				parameters: [
 					new FunctionParameter(
@@ -38,7 +38,7 @@ public static class CoreLib
 			_ = opAdd.Writer
 				.Write(new LoadArg(0))
 				.Write(new LoadArg(1))
-				.Write(new Add())
+				.Write(new Add(PrimitiveKind.I32))
 				.Write(new Return());
 		}
 

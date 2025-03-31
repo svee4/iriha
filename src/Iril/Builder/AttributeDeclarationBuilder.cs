@@ -13,6 +13,6 @@ public sealed class AttributeDeclarationBuilder
 		Parameters = parameters.ToArray();
 	}
 
-	public TypeSystem.Attribute Build() => 
-		new TypeSystem.Attribute(Name, Parameters.ToImmutableArray());
+	public TypeSystem.Attribute Build(string assembly) => 
+		new TypeSystem.Attribute(assembly, Name, Parameters.ToImmutableArray());
 }

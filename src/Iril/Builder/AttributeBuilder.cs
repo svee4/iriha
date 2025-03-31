@@ -15,5 +15,5 @@ public sealed class AttributeBuilder
 	}
 
 	public AttributeApplication Apply() =>
-		new AttributeApplication(Attribute.Build(), Arguments.ToImmutableArray());
+		new AttributeApplication(Attribute.Build("Core"), Arguments.ToImmutableArray());
 }
